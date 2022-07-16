@@ -1,0 +1,190 @@
+
+#一 本实验用于验证只有decoder是否能取得还可以的结果，所以在训练时只使用decoder
+* 在取消了GAT层之后，模型在drugvirus上的结果仍能达到：
+1. auc socre 0.7622
+2. aupr score 0.7644 
+3. Best Ave Test: 0.7246
+
+#二 本实验将HeCo加入进来，作为独立模块单独运行
+加入HeCo模型，且仍不使用GAT模块时，结果如下：
+1. auc socre 0.8306
+2. aupr score 0.826
+3. Best Ave Test: 0.7766
+
+在以上基础上去除两个节点特征的batchnormal和layernormal之后，训练结果为：
+1. auc socre 0.8433
+2. aupr score 0.8426
+3. Best Ave Test: 0.7835
+
+去除NN层的batchnormal和layernormal之后，训练结果为：
+1. specificity score [0.8021 0.8235 0.8556 0.7796 0.8441]
+2. mcc score [0.5361 0.5432 0.6382 0.6476 0.5739]
+3. auc socre 0.8432
+4. aupr score 0.8464
+5. Best Ave Test: 0.7926
+
+
+# 三 将HeCo融合到模型中，一起训练
+
+
+#3_3将encoder和decoder放在一起训练
+将HeCo.py的内容复制到model.py中，整合损失函数，只需要循行model一个模型，在每个epoch同时训练encoder和decoder
+1. specificity score [0.7754 0.8128 0.8503 0.7849 0.8065]
+2. mcc score [0.519  0.5268 0.577  0.6135 0.5969]
+3. auc socre 0.8454
+4. aupr score 0.8438
+5. Best Ave Test: 0.7825
+
+#3_4用于修改dd、mm相似度数据、dmd、mdm个数
+1. 以前用的dmd邻接矩阵的data为每个dd对之间的meta path个数，现在将其都改为1，normalize时会获得相同的值
+结果相对较低：
+1. specificity score [0.7807 0.8021 0.7754 0.7849 0.7473]
+2. mcc score [0.4572 0.485  0.5033 0.5753 0.4893]
+3. auc socre 0.8077
+4. aupr score 0.8003
+5. Best Ave Test: 0.7503
+
+2. network schema view聚合邻居个数（sample_rate）修改为20、30、40
+
+```
+sample_rate有两个[a,b]. a表示同类型(dd、mm)的sample个数; b表示dm、md的sample个数
+dd、mm来自于相似度计算、dm、md来自于原始邻接矩阵，理论上a应该小于b，因为dm、md是真实的pos样本
+
+sample_rate:[5,5]:
+acc Score: [0.7701 0.7594 0.7861 0.8091 0.7769]
+specificity score [0.7701 0.8556 0.8235 0.8226 0.8441]
+mcc score [0.5401 0.5286 0.5738 0.6185 0.5588]
+auc socre 0.8408
+aupr score 0.8449
+Best Ave Test: 0.7803
+
+sample_rate:[10,10]:
+acc Score: [0.762  0.762  0.7941 0.8065 0.7742]
+specificity score [0.8021 0.8021 0.8717 0.7742 0.8656]
+mcc score [0.5258 0.5258 0.5954 0.6142 0.5578]
+auc socre 0.8325
+aupr score 0.8378
+Best Ave Test: 0.7798
+
+sample_rate:[20,20]:
+acc Score: [0.7781 0.762  0.7941 0.8038 0.7769]
+specificity score [0.7647 0.7433 0.8824 0.7903 0.8172]
+mcc score [0.5563 0.5244 0.5976 0.6077 0.5556]
+auc socre 0.8388
+aupr score 0.8505
+Best Ave Test: 0.7830
+
+sample_rate:[30,30]:
+acc Score: [0.762  0.7674 0.8021 0.8065 0.7876]
+specificity score [0.7701 0.7861 0.8396 0.8602 0.8333]
+mcc score [0.5241 0.5351 0.606  0.6165 0.5777]
+auc socre 0.8348
+aupr score 0.8429
+Best Ave Test: 0.7851
+
+sample_rate:[40,40]:
+acc Score: [0.7674 0.762  0.7968 0.8118 0.7742]
+specificity score [0.7754 0.8342 0.8503 0.8065 0.8387]
+mcc score [0.5348 0.5296 0.597  0.6237 0.553 ]
+auc socre 0.8404
+aupr score 0.8339
+Best Ave Test: 0.7824
+
+sample_rate:[5,10]:
+acc Score: [0.7647 0.7567 0.7888 0.8091 0.7769]
+specificity score [0.7754 0.7166 0.8556 0.8441 0.7957]
+mcc score [0.5295 0.515  0.5828 0.6198 0.5542]
+auc socre 0.8449
+aupr score 0.8467
+Best Ave Test: 0.7792
+
+sample_rate:[5,15]:
+acc Score: [0.762  0.7567 0.7914 0.8065 0.7742]
+specificity score [0.8342 0.8021 0.8556 0.7312 0.828 ]
+mcc score [0.5296 0.5155 0.5877 0.62   0.5516]
+auc socre 0.833
+aupr score 0.8378
+Best Ave Test: 0.7782
+
+sample_rate:[5,20]:
+acc Score: [0.7647 0.7674 0.7914 0.8065 0.7769]
+specificity score [0.8075 0.8289 0.8449 0.7957 0.8387]
+mcc score [0.5314 0.5389 0.5863 0.613  0.558 ]
+auc socre 0.8192
+aupr score 0.8246
+Best Ave Test: 0.7814
+
+sample_rate:[10,5]:
+acc Score: [0.7701 0.7594 0.7834 0.8145 0.7688]
+specificity score [0.7754 0.8128 0.7807 0.8226 0.7634]
+mcc score [0.5401 0.5217 0.5669 0.6291 0.5377]
+auc socre 0.8227
+aupr score 0.8199
+Best Ave Test: 0.7792
+```
+
+1.  问题2
+```
+sc  [0.9841054  0.01589463] [dd dm]
+sc  [0.01534336 0.98465663] [md mm]
+学到后面，network schemaview下的邻居聚合时，dd和mm两个通过相似度聚合邻居获得的表示权重很大，
+基本忽略了dm和md两个通过adj聚合邻居节点获得的表示
+使用sample_rate:[5,10]评估:
+
+sc[0.5,0.5]:
+auc socre 0.8319
+aupr score 0.8317
+Best Ave Test: 0.7867
+
+原因分析：
+对比学习的另一个view为：dmd、mdm，是通过聚合同类型节点学习邻居表示，
+所以使得在对比过程中network view 下dd、mm根据相似度聚合邻居节点的比重过高
+
+造成的结果：
+上述问题造成的结果是两个view聚合了相同的邻居，导致两个对比view学习到的是同一个底层view。
+
+解决办法：
+network schema view只聚合具有相互作用的真实邻居，不聚合相似邻居；meta path view聚合信息不变。
+
+
+实验验证:只考虑adj下的邻居聚合：
+acc Score: [0.762  0.7647 0.8048 0.8118 0.7876]
+specificity score [0.8503 0.8289 0.8396 0.8333 0.8441]
+mcc score [0.5324 0.5338 0.6111 0.6242 0.579 ]
+auc socre 0.8389
+aupr score 0.8467
+Best Ave Test: 0.7862
+
+只考虑dd、mm相似度下的邻居聚合：
+acc Score: [0.762  0.7647 0.7995 0.8091 0.7742]
+specificity score [0.7647 0.7807 0.8556 0.8065 0.8602]
+mcc score [0.5241 0.5297 0.6027 0.6183 0.5567]
+auc socre 0.8329
+aupr score 0.8337
+Best Ave Test: 0.7819
+总的来说，考虑adj和相似度两个类型下的邻居还是有点儿作用
+
+既然相似度影响很大，可以重新构建相似度邻居，使用不同的相似度公式。
+但这需要drug、microbe的原始数据
+
+
+通过相似度构建dd、mm邻居时设置阈值为0.6，sample_rate:[20,20]
+结果较低
+
+更改用于对比学习的pos_num，原始为5，pos_num是对比中的正样本
+更改为pos_num = 10：
+acc Score: [0.7647 0.7701 0.7995 0.8118 0.7742]
+specificity score [0.8021 0.8289 0.8128 0.828  0.8602]
+mcc score [0.5309 0.5439 0.5991 0.624  0.5567]
+auc socre 0.8452
+aupr score 0.8533 
+Best Ave Test: 0.7841
+```
+
+
+```
+files:
+  "pssm_arr": a protein vector with 220 length,
+```
+* **"pssm_arr"** is the protein vector generated by PsePSSM.
+
